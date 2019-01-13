@@ -13,10 +13,7 @@ namespace DataAccess.Sql.Provider
     {
         public string ConnectionString { get; set; }
 
-        public MySqlProvider()
-        {
-
-        }
+        public MySqlProvider() { }
 
         public MySqlProvider(string connectionString)
         {
