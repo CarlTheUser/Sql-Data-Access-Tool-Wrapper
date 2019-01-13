@@ -68,6 +68,7 @@
     <Compile Include="Provider\OleDbProvider.cs" />
     <Compile Include="Provider\SqlServerProvider.cs" />
     <Compile Include="SqlCaller.cs" />
+    <Compile Include="SqlProviderFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
