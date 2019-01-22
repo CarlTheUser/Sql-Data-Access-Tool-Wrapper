@@ -83,6 +83,12 @@ namespace DataAccess.Sql
             return dt;
         }
 
+        public int ExecuteNonQuery(string commandString)
+        {
+            
+            return ExecuteNonQuery(sqlProvider.CreateCommand(commandString));
+        }
+
         public int ExecuteNonQuery(DbCommand command)
         {
 
@@ -107,55 +113,9 @@ namespace DataAccess.Sql
             return ret;
         }
 
-        public int ExecuteNonQuery(string commandString)
-        {
-            int ret = 0;
-            using (DbConnection connection = sqlProvider.CreateConnection())
-            {
-                DbCommand command = connection.CreateCommand();
-                command.CommandText = commandString;
-                try
-                {
-                    connection.Open();
-                    ret = command.ExecuteNonQuery();
-                }
-                catch
-                {
-                    throw;
-                }
-                finally
-                {
-                    connection.Close();
-                }
-            }
-            return ret;
-        }
-
         public object ExecuteScalar(string queryString)
         {
-            object obj = null;
-
-            using (DbConnection connection = sqlProvider.CreateConnection())
-            {
-                using (DbCommand command = connection.CreateCommand())
-                {
-                    command.CommandText = queryString;
-                    try
-                    {
-                        connection.Open();
-                        obj = command.ExecuteScalar();
-                    }
-                    catch
-                    {
-                        throw;
-                    }
-                    finally
-                    {
-                        connection.Close();
-                    }
-                }
-            }
-            return obj;
+            return ExecuteScalar(sqlProvider.CreateCommand(queryString));
         }
 
         public object ExecuteScalar(DbCommand command)
@@ -324,6 +284,11 @@ namespace DataAccess.Sql
         public IEnumerable<T> Get<T>(DbCommand command) where T : class, new()
         {
             return Get(new ReflectionDataMapper<T>(), command);
+        }
+
+        public IEnumerable<T> Get<T>(IDataMapper<T> dataMapper, string queryString) where T : class, new()
+        {
+            return Get(dataMapper, sqlProvider.CreateCommand(queryString));
         }
 
         public IEnumerable<T> Get<T>(IDataMapper<T> dataMapper, DbCommand command) where T : class, new()
