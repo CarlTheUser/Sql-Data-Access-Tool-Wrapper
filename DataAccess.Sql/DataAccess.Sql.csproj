@@ -67,6 +67,8 @@
     <Compile Include="Provider\MySqlProvider.cs" />
     <Compile Include="Provider\OleDbProvider.cs" />
     <Compile Include="Provider\SqlServerProvider.cs" />
+    <Compile Include="Querying\QueryFilter.cs" />
+    <Compile Include="Querying\SqlQuery.cs" />
     <Compile Include="SqlCaller.cs" />
     <Compile Include="SqlProviderFactory.cs" />
   </ItemGroup>

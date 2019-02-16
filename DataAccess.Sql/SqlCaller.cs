@@ -109,53 +109,8 @@ namespace DataAccess.Sql
 
         public int ExecuteNonQuery(string commandString)
         {
-            int ret = 0;
-            using (DbConnection connection = sqlProvider.CreateConnection())
-            {
-                DbCommand command = connection.CreateCommand();
-                command.CommandText = commandString;
-                try
-                {
-                    connection.Open();
-                    ret = command.ExecuteNonQuery();
-                }
-                catch
-                {
-                    throw;
-                }
-                finally
-                {
-                    connection.Close();
-                }
-            }
-            return ret;
-        }
 
-        public object ExecuteScalar(string queryString)
-        {
-            object obj = null;
-
-            using (DbConnection connection = sqlProvider.CreateConnection())
-            {
-                using (DbCommand command = connection.CreateCommand())
-                {
-                    command.CommandText = queryString;
-                    try
-                    {
-                        connection.Open();
-                        obj = command.ExecuteScalar();
-                    }
-                    catch
-                    {
-                        throw;
-                    }
-                    finally
-                    {
-                        connection.Close();
-                    }
-                }
-            }
-            return obj;
+            return ExecuteNonQuery(sqlProvider.CreateCommand(commandString);
         }
 
         public object ExecuteScalar(DbCommand command)
@@ -182,6 +137,12 @@ namespace DataAccess.Sql
             return obj;
         }
 
+        public object ExecuteScalar(string queryString)
+        {
+            return ExecuteScalar(sqlProvider.CreateCommand(queryString));
+        }
+
+
         public bool ExecuteTransaction(IEnumerable<Action<DbCommand>> commandActions)
         {
             if (commandActions.Count() == 0) return true;
@@ -197,6 +158,7 @@ namespace DataAccess.Sql
                     command.Transaction = transaction;
                     foreach (Action<DbCommand> commandAction in commandActions)
                     {
+                        commandAction.Invoke(command);
                         command.ExecuteNonQuery();
                         command.Parameters.Clear();
                     }
@@ -344,7 +306,6 @@ namespace DataAccess.Sql
 
                     watch.Stop();
 
-                    Console.WriteLine($"Elapsed time for Property Mapping ({dataMapper.GetType().Name}):  {watch.ElapsedMilliseconds}ms\nResult set Row Count: " + temp.Count);
                     Debug.WriteLine($"Elapsed time for Property Mapping ({dataMapper.GetType().Name}):  {watch.ElapsedMilliseconds}ms\nResult set Row Count: " + temp.Count);
                 }
                 catch { throw; }
