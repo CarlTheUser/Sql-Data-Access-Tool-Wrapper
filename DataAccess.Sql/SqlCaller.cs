@@ -110,7 +110,7 @@ namespace DataAccess.Sql
         public int ExecuteNonQuery(string commandString)
         {
 
-            return ExecuteNonQuery(sqlProvider.CreateCommand(commandString);
+            return ExecuteNonQuery(sqlProvider.CreateCommand(commandString));
         }
 
         public object ExecuteScalar(DbCommand command)

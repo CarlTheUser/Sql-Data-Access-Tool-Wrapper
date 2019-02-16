@@ -49,7 +49,7 @@ namespace DataAccess.Sql.Querying
             UsesParameter = LeftFilter.UsesParameter || RightFilter.UsesParameter;
         }
 
-        protected internal override string ToSqlClause()
+        public override string ToSqlClause()
         {
             return $"{LeftFilter.ToSqlClause()} {Link} {RightFilter.ToSqlClause()}";
         }
@@ -81,7 +81,7 @@ namespace DataAccess.Sql.Querying
             return GroupedCriterion.GetParameters();
         }
 
-        protected internal override string ToSqlClause()
+        public override string ToSqlClause()
         {
             return $"({GroupedCriterion.ToSqlClause()})";
         }
