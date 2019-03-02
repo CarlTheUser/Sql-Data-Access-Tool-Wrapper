@@ -40,7 +40,7 @@ namespace DataAccess.Sql.Mapping
             }
         }
 
-        public T CreateMappedInstance(IDataReader reader)
+        public virtual T CreateMappedInstance(IDataReader reader)
         {
             var mappingsCopy = PropertyMappingsCache;
 

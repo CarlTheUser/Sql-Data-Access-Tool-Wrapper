@@ -41,12 +41,14 @@ namespace Demo
         {
             string query = BASE_QUERY;
 
-            bool usesParameter = _filter.UsesParameter;
+            bool usesParameter = false;
 
             DbParameter[] parameters = null;
 
             if (_filter != null)
             {
+                usesParameter = _filter.UsesParameter;
+
                 query += $"WHERE {_filter.ToSqlClause()} ";
 
                 parameters = _filter.GetParameters();

@@ -6,6 +6,7 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataAccess.Sql
@@ -40,10 +41,6 @@ namespace DataAccess.Sql
                         dt.Load(dr);
                     }
                 }
-                catch
-                {
-                    throw;
-                }
                 finally
                 {
                     connection.Close();
@@ -70,10 +67,6 @@ namespace DataAccess.Sql
                             dt = dr.GetSchemaTable();
                         }
                     }
-                    catch
-                    {
-                        throw;
-                    }
                     finally
                     {
                         connection.Close();
@@ -94,10 +87,6 @@ namespace DataAccess.Sql
                 {
                     connection.Open();
                     ret = command.ExecuteNonQuery();
-                }
-                catch
-                {
-                    throw;
                 }
                 finally
                 {
@@ -124,10 +113,6 @@ namespace DataAccess.Sql
                 {
                     connection.Open();
                     obj = command.ExecuteScalar();
-                }
-                catch
-                {
-                    throw;
                 }
                 finally
                 {
@@ -265,10 +250,6 @@ namespace DataAccess.Sql
                     //Debug.WriteLine($"Elapsed time for Property Mapping (Manual Mapping):  {watch.ElapsedMilliseconds}ms");
                     //Debug.WriteLine("Result set Row Count: " + temp.Count);
                 }
-                catch
-                {
-                    throw;
-                }
                 finally
                 {
                     command.Connection.Close();
@@ -308,13 +289,33 @@ namespace DataAccess.Sql
 
                     Debug.WriteLine($"Elapsed time for Property Mapping ({dataMapper.GetType().Name}):  {watch.ElapsedMilliseconds}ms\nResult set Row Count: " + temp.Count);
                 }
-                catch { throw; }
                 finally { connection.Close(); }
             }
 
             return temp;
         }
 
+        public async Task<IEnumerable<T>> GetAsync<T>(IDataMapper<T> dataMapper, DbCommand command, CancellationToken token) where T: class, new()
+        {
+            List<T> temp = new List<T>();
+
+            using (DbConnection connection = command.Connection = command.Connection ?? sqlProvider.CreateConnection())
+            {
+                try
+                {
+                    await connection.OpenAsync(token);
+
+                    using (var reader = await command.ExecuteReaderAsync(token))
+                    {
+                        while (await reader.ReadAsync(token)) temp.Add(dataMapper.CreateMappedInstance(reader));
+                    }
+                }
+                finally { connection.Close(); }
+            }
+
+            return temp;
+        }
+        
         public IEnumerable<dynamic> GetDynamic(string commandString)
         {
             return GetDynamic(sqlProvider.CreateCommand(commandString));
@@ -344,9 +345,33 @@ namespace DataAccess.Sql
 
                     Console.WriteLine($"Elapsed time for Property Mapping ({mapper.GetType().Name}):  {watch.ElapsedMilliseconds}ms\nResult set Row Count: " + temp.Count);
                 }
-                catch
+                finally
                 {
-                    throw;
+                    command.Connection.Close();
+                }
+            }
+
+            return temp;
+        }
+
+        public async Task<IEnumerable<dynamic>> GetDynamicAsync(DbCommand command, CancellationToken token)
+        {
+            List<dynamic> temp = new List<dynamic>();
+
+            using (DbConnection connection = sqlProvider.CreateConnection())
+            {
+                command.Connection = connection;
+
+                try
+                {
+                    await command.Connection.OpenAsync(token);
+
+                    using (DbDataReader reader = await command.ExecuteReaderAsync(token))
+                    {
+                        DynamicMapper mapper = new DynamicMapper(reader);
+
+                        while (await reader.ReadAsync()) temp.Add(mapper.CreateMappedInstance(reader));
+                    }
                 }
                 finally
                 {
