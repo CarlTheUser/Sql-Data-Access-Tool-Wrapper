@@ -20,11 +20,6 @@ namespace DataAccess.Sql
             this.sqlProvider = sqlProvider ?? throw new ArgumentNullException("sqlProvider");
         }
 
-        public DataTable Query(string queryString)
-        {
-            return Query(sqlProvider.CreateCommand(queryString));
-        }
-
         public DataTable Query(DbCommand command)
         {
             DataTable dt = null;
@@ -47,6 +42,11 @@ namespace DataAccess.Sql
                 }
             }
             return dt;
+        }
+
+        public DataTable Query(string queryString)
+        {
+            return Query(sqlProvider.CreateCommand(queryString));
         }
 
         //Useful if you want to get the underlying schema of a table (Select top 1 * from foo...)
@@ -126,8 +126,7 @@ namespace DataAccess.Sql
         {
             return ExecuteScalar(sqlProvider.CreateCommand(queryString));
         }
-
-
+        
         public bool ExecuteTransaction(IEnumerable<Action<DbCommand>> commandActions)
         {
             if (commandActions.Count() == 0) return true;
@@ -259,16 +258,6 @@ namespace DataAccess.Sql
             return temp;
         }
 
-        public IEnumerable<T> Get<T>(string query) where T : class, new()
-        {
-            return Get<T>(sqlProvider.CreateCommand(query));
-        }
-
-        public IEnumerable<T> Get<T>(DbCommand command) where T : class, new()
-        {
-            return Get(new ReflectionDataMapper<T>(), command);
-        }
-
         public IEnumerable<T> Get<T>(IDataMapper<T> dataMapper, DbCommand command) where T : class, new()
         {
             List<T> temp = new List<T>();
@@ -295,6 +284,21 @@ namespace DataAccess.Sql
             return temp;
         }
 
+        public IEnumerable<T> Get<T>(IDataMapper<T> dataMapper, string query) where T: class, new()
+        {
+            return Get(dataMapper, sqlProvider.CreateCommand(query));
+        }
+
+        public IEnumerable<T> Get<T>(DbCommand command) where T : class, new()
+        {
+            return Get(new ReflectionDataMapper<T>(), command);
+        }
+
+        public IEnumerable<T> Get<T>(string query) where T : class, new()
+        {
+            return Get<T>(sqlProvider.CreateCommand(query));
+        }
+        
         public async Task<IEnumerable<T>> GetAsync<T>(IDataMapper<T> dataMapper, DbCommand command, CancellationToken token) where T: class, new()
         {
             List<T> temp = new List<T>();
@@ -314,6 +318,32 @@ namespace DataAccess.Sql
             }
 
             return temp;
+        }
+
+        public async Task<IEnumerable<T>> GetAsync<T>(IDataMapper<T> dataMapper, string query, CancellationToken token) where T: class, new()
+        {
+            return await GetAsync(dataMapper, sqlProvider.CreateCommand(query), token);
+        }
+        
+        public async Task<IEnumerable<T>> GetAsync<T>(IDataMapper<T> dataMapper, DbCommand command) where T: class, new()
+        {
+            CancellationTokenSource source = new CancellationTokenSource();
+            return await GetAsync(dataMapper, command, source.Token);
+        }
+
+        public async Task<IEnumerable<T>> GetAsync<T>(IDataMapper<T> dataMapper, string query) where T: class, new()
+        {
+            return await GetAsync(dataMapper, sqlProvider.CreateCommand(query));
+        }
+
+        public async Task<IEnumerable<T>> GetAsync<T>(DbCommand command) where T: class, new()
+        {
+            return await GetAsync(new ReflectionDataMapper<T>(), command);
+        }
+
+        public async Task<IEnumerable<T>> GetAsync<T>(string query) where T: class, new()
+        {
+            return await GetAsync<T>(sqlProvider.CreateCommand(query));
         }
         
         public IEnumerable<dynamic> GetDynamic(string commandString)
