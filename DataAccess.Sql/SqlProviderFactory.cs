@@ -23,5 +23,10 @@ namespace DataAccess.Sql
         {
             return new OleDbProvider(connectionString);
         }
+
+        public static ISqlProvider CreatePostgreSqlProvider(string connectionString)
+        {
+            return new PostgreSqlProvider(connectionString);
+        }
     }
 }

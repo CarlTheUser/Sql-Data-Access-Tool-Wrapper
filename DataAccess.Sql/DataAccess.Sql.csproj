@@ -38,6 +38,9 @@
     <Reference Include="MySql.Data, Version=8.0.13.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
       <HintPath>..\packages\MySql.Data.8.0.13\lib\net452\MySql.Data.dll</HintPath>
     </Reference>
+    <Reference Include="Npgsql">
+      <HintPath>..\..\..\..\..\Desktop\TEMP\JDataAccess.Library\JDataAccess\bin\Debug\Npgsql.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -66,6 +69,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Provider\MySqlProvider.cs" />
     <Compile Include="Provider\OleDbProvider.cs" />
+    <Compile Include="Provider\PostgreSqlProvider.cs" />
     <Compile Include="Provider\SqlServerProvider.cs" />
     <Compile Include="Querying\QueryFilter.cs" />
     <Compile Include="Querying\SqlQuery.cs" />
