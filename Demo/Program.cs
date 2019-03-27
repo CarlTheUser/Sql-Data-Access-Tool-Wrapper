@@ -18,14 +18,16 @@ namespace Demo
 
             //ProductQuery query = new ProductQuery();
 
-            //IEnumerable<Product> matchedProducts = query.Filter(new ProductNameMatchesFilter(productName)).Execute();
+            //IEnumerable<Product> matchedProducts = query
+            //    .Filter(new ProductNameMatchesFilter(productName))
+            //    .Execute();
 
-            //foreach(var product in matchedProducts)
+            //foreach (var product in matchedProducts)
             //{
             //    Console.WriteLine($"Product Id: {product.Id}");
             //    Console.WriteLine($"Product Name:  {product.Name}");
             //    Console.WriteLine("Product Tags: ");
-            //    foreach(string tag in product.Tags) Console.WriteLine($"\t{tag}");
+            //    foreach (string tag in product.Tags) Console.WriteLine($"\t{tag}");
             //    Console.WriteLine();
             //}
 
@@ -38,7 +40,7 @@ namespace Demo
             CancellationToken token = tokenSource.Token;
 
             caller.GetAsync(
-                new UserActivitiesMapper(tokenSource),
+                new ReflectionDataMapper<UserActivity>(),
                 provider.CreateCommand("SELECT LogId, UserId, UserInfo, LogDate, ActivityScope, ActivityDetails FROM vw_useractivitylog"),
                 token).ContinueWith(activitiesTask =>
             {
@@ -80,7 +82,7 @@ namespace Demo
 
         class UserActivity
         {
-            [DataField("LogId")]
+            [DataField("LogID")]
             public int ActivityNumber { get; set; }
 
             public int UserId { get; set; }

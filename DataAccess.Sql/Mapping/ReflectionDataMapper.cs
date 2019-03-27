@@ -18,8 +18,12 @@ namespace DataAccess.Sql.Mapping
             if (PropertyMappingsCache == null)
             {
                 //PropertyMappingsCache = new Dictionary<string, PropertyInfo>();
-                PropertyMappingsCache = new Dictionary<string, PropertyMap>();
 
+                //PropertyMappingsCache = new Dictionary<string, PropertyMap>();
+
+                StringComparer comparer = StringComparer.OrdinalIgnoreCase;
+                PropertyMappingsCache = new Dictionary<string, PropertyMap>(comparer);
+                
                 Type type = typeof(T);
 
                 PropertyInfo[] properties = type.GetProperties();

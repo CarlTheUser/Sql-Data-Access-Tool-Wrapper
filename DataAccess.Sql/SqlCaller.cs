@@ -305,11 +305,12 @@ namespace DataAccess.Sql
 
             using (DbConnection connection = command.Connection = command.Connection ?? sqlProvider.CreateConnection())
             {
+                
                 try
                 {
                     await connection.OpenAsync(token);
 
-                    using (var reader = await command.ExecuteReaderAsync(token))
+                    using (DbDataReader reader = command.ExecuteReaderAsync(token).Result)
                     {
                         while (await reader.ReadAsync(token)) temp.Add(dataMapper.CreateMappedInstance(reader));
                     }
@@ -320,6 +321,13 @@ namespace DataAccess.Sql
             return temp;
         }
 
+        // Testing GetAsync<T> simulating delay in query enough to call Cancel() on cancellation token source 
+        private async Task<bool> DelayReader(DbDataReader reader, CancellationToken token)
+        {
+            await Task.Delay(20);
+            return await reader.ReadAsync(token);
+        }
+        
         public async Task<IEnumerable<T>> GetAsync<T>(IDataMapper<T> dataMapper, string query, CancellationToken token) where T: class, new()
         {
             return await GetAsync(dataMapper, sqlProvider.CreateCommand(query), token);
@@ -345,7 +353,29 @@ namespace DataAccess.Sql
         {
             return await GetAsync<T>(sqlProvider.CreateCommand(query));
         }
-        
+
+        public async Task<IEnumerable<T>> IterateAsync<T>(IDataMapper<T> dataMapper, Action<T> iteratorAction, DbCommand command, CancellationToken token) where T : class, new()
+        {
+            List<T> temp = new List<T>();
+
+            using (DbConnection connection = command.Connection = command.Connection ?? sqlProvider.CreateConnection())
+            {
+
+                try
+                {
+                    await connection.OpenAsync(token);
+
+                    using (DbDataReader reader = command.ExecuteReaderAsync(token).Result)
+                    {
+                        while (await reader.ReadAsync(token))  await Task.Run(() => iteratorAction.Invoke(dataMapper.CreateMappedInstance(reader)), token);
+                    }
+                }
+                finally { connection.Close(); }
+            }
+
+            return temp;
+        }
+
         public IEnumerable<dynamic> GetDynamic(string commandString)
         {
             return GetDynamic(sqlProvider.CreateCommand(commandString));
