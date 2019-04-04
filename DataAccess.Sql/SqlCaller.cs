@@ -127,7 +127,7 @@ namespace DataAccess.Sql
             return ExecuteScalar(sqlProvider.CreateCommand(queryString));
         }
         
-        public bool ExecuteTransaction(IEnumerable<Action<DbCommand>> commandActions)
+        public bool ExecuteTransaction(IEnumerable<Action<DbCommand>> commandActions, Func<Exception, bool> ErrorHandle = null)
         {
             if (commandActions.Count() == 0) return true;
             bool success = false;
@@ -149,11 +149,16 @@ namespace DataAccess.Sql
                     transaction.Commit();
                     success = true;
                 }
-                catch
+                catch (Exception e)
                 {
-                    success = false;
-                    transaction?.Rollback();
-                    throw;
+                    bool errorHandled = ErrorHandle != null ? ErrorHandle.Invoke(e) : false;
+
+                    if (!errorHandled)
+                    {
+                        success = false;
+                        transaction?.Rollback();
+                        throw;
+                    }
                 }
                 finally
                 {
@@ -165,14 +170,15 @@ namespace DataAccess.Sql
 
         //Useful for bulk inserts, updates, delete on a single data type or table
         /// <summary>
-        /// Call a command repeatedly against multiple objects of same type. (Bulk operation for sets of <T>)
+        /// Wraps identical database operation for sets of T in a transaction.
         /// </summary>
         /// <typeparam name="T">Type of collection</typeparam>
         /// <param name="collection">Collection</param>
         /// <param name="commandInitializer">Initializer for command: Set your command string or command type here.</param>
         /// <param name="bindingAction">Bind your T to command parameters here</param>
-        /// <returns></returns>
-        public bool OperateCollection<T>(IEnumerable<T> collection, Action<DbCommand> commandInitializer, Action<DbCommand, T> bindingAction)
+        /// <paramref name="ErrorHandle">Optional function that takes exception as argument. Returns true if exception is handled and stops the exception propagation otherwise throws the exception.</paramref>
+        /// <returns>Boolean indicating success of the operation</returns>
+        public bool OperateCollection<T>(IEnumerable<T> collection, Action<DbCommand> commandInitializer, Action<DbCommand, T> bindingAction, Func<Exception, bool> ErrorHandle = null)
         {
             bool successful = false;
 
@@ -204,11 +210,16 @@ namespace DataAccess.Sql
                 transaction.Commit();
                 successful = true;
             }
-            catch
+            catch(Exception e)
             {
-                transaction.Rollback();
-                successful = false;
-                throw;
+                bool errorHandled = ErrorHandle != null ? ErrorHandle.Invoke(e) : false; 
+
+                if(!errorHandled)
+                {
+                    transaction.Rollback();
+                    successful = false;
+                    throw;
+                }
             }
             finally
             {
